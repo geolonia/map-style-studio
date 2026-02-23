@@ -21,7 +21,7 @@ export function useColorfulJson(json: string) {
               display: 'inline-block',
               width: 14,
               height: 14,
-              border: '1px solid #ccc',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               borderRadius: 3,
               marginLeft: 4,
               background: color,

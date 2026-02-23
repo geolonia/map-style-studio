@@ -42,7 +42,7 @@ const MapPopup: React.FC<Props> = ({ lngLat, properties, point, onClose }) => {
                                 whiteSpace: 'pre-wrap',
                                 wordBreak: 'break-all',
                                 margin: 0,
-                                background: '#f7f7f7',
+                                background: 'rgba(0, 0, 0, 0.3)',
                                 borderRadius: 4,
                                 padding: 8,
                                 marginBottom: 8,
@@ -63,7 +63,7 @@ const MapPopup: React.FC<Props> = ({ lngLat, properties, point, onClose }) => {
                     height: 0,
                     borderLeft: '10px solid transparent',
                     borderRight: '10px solid transparent',
-                    borderTop: '10px solid #fff',
+                    borderTop: '10px solid rgba(30, 30, 30, 0.95)',
                     filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.08))',
                 }}
             />

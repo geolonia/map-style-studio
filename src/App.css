@@ -1,49 +1,66 @@
 body, #root {
   margin: 0;
   padding: 0;
-  font-family: Arial, sans-serif;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
 }
 
-/* common style */
-.scroll-y {
-  overflow-y: auto;
-}
-
-.margin-none {
-  margin: 0 !important;
-}
-
+/* Utility classes */
 .full-all {
   width: 100%;
   height: 100%;
 }
 
+.scroll-y {
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scroll-y::-webkit-scrollbar {
+  display: none;
+}
 
-/* custom style */
-
+/* Editor card - adapted for dark floating panel */
 .editor-card {
-  width: 505px;
-  background-color: #fcfcfc;
+  width: 100%;
   height: 100%;
+  background-color: transparent;
   display: block;
+  border: none;
 }
 .editor-card .ant-card-body {
-  display: block;
+  display: flex;
+  flex-direction: column;
   height: 100%;
+  padding: 8px 12px;
 }
 
+/* Layer editor tabs within floating panel */
+#layer-editor .ant-tabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
 #layer-editor .ant-tabs-nav {
   margin-bottom: 0;
+  flex-shrink: 0;
 }
 #layer-editor .ant-tabs-content-holder {
-  height: calc(100vh - 156px);
-  overflow-y: scroll;
+  flex: 1;
+  overflow-y: auto;
   padding: 8px 0;
-  scrollbar-width: none;         /* Firefox */
-  -ms-overflow-style: none;      /* IE, Edge */
+  min-height: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 #layer-editor .ant-tabs-content-holder::-webkit-scrollbar {
-  display: none;                 /* Chrome, Safari */
+  display: none;
+}
+#layer-editor .ant-tabs-content {
+  height: 100%;
+}
+#layer-editor .ant-tabs-tabpane {
+  height: 100%;
 }

@@ -35,13 +35,16 @@ const AddressSearchBar: React.FC<Props> = ({ map }) => {
   return (
     <div style={{
       position: 'absolute',
-      top: 4,
-      right: 4,
+      top: 16,
+      right: 16,
       zIndex: 10,
-      background: 'rgba(255,255,255,0.9)',
+      background: 'rgba(20, 20, 20, 0.75)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
       borderRadius: 8,
       padding: 4,
-      boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+      boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+      border: '1px solid rgba(255,255,255,0.08)'
     }}>
       <Space>
         <Input
