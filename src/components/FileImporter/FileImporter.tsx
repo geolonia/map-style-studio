@@ -53,7 +53,7 @@ const FileImporter: React.FC<Props> = ({ setLoadError }) => {
     <Row justify="center" align="middle">
       <Col>
         <div className="file-importer-container">
-          <Dragger {...props} showUploadList={false} style={{ backgroundColor: '#fff' }}>
+          <Dragger {...props} showUploadList={false} style={{ backgroundColor: 'transparent' }}>
             {spinning ?
               <Spin spinning={spinning} tip="styleを読み込んでいます" />
               :

@@ -13,21 +13,26 @@
   top: 44px;
   left: 0;
   width: 100%;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 4px;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
 }
 
 .style-url-loader-history-item {
   padding: 8px 12px;
   cursor: pointer;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: left;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.style-url-loader-history-item:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .style-url-loader-history-item.last {

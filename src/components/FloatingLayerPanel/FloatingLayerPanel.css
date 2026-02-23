@@ -1,0 +1,52 @@
+.floating-layer-panel {
+  position: absolute;
+  top: 72px;
+  left: 12px;
+  bottom: 12px;
+  width: 460px;
+  z-index: 100;
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  pointer-events: auto;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.floating-layer-panel.visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.floating-layer-panel.hidden {
+  transform: translateX(-490px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Toggle button */
+.panel-toggle-button {
+  position: absolute;
+  top: 80px;
+  z-index: 110;
+  width: 36px;
+  height: 36px;
+  background: rgba(20, 20, 20, 0.75) !important;
+  backdrop-filter: blur(12px);
+  border-radius: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+  transition: left 0.3s ease;
+}
+
+.panel-toggle-button:hover {
+  background: rgba(40, 40, 40, 0.85) !important;
+  color: #fff !important;
+}
