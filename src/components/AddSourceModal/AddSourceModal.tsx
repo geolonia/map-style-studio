@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Space, Select, Input, message } from 'antd';
 import type { SourceSpecification } from 'maplibre-gl';
+import { sanitizeSourceSpec } from '../../utils/sanitizeSourceSpec';
 
 const SOURCE_TYPES = [
   { label: 'vector', value: 'vector' },
@@ -47,8 +48,9 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ open, onOk, onCancel })
       return;
     }
     const { sourceId, ...sourceSpec } = newSource;
-    console.log('追加するソース:', sourceId, sourceSpec, newSource);
-    onOk(sourceId, sourceSpec as SourceSpecification);
+    const sanitized = sanitizeSourceSpec(sourceSpec);
+    console.log('追加するソース:', sourceId, sanitized, newSource);
+    onOk(sourceId, sanitized as SourceSpecification);
     setNewSource(initialState);
   };
 
