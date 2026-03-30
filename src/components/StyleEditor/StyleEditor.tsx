@@ -191,7 +191,8 @@ const StyleEditor: React.FC = () => {
         onOk={handleAddLayerOk}
         onCancel={handleAddLayerCancel}
         form={addLayerForm} 
-        layers={style && typeof style !== 'string' ? style?.layers : []} 
+        layers={style && typeof style !== 'string' ? style?.layers : []}
+        sources={style && typeof style !== 'string' ? style?.sources : undefined}
       />
     </Layout>
   );
