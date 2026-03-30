@@ -5,6 +5,7 @@ import { useAtom } from 'jotai';
 import { styleAtom } from '../../atom';
 import type { LayerSpecification, SourceSpecification, StyleSpecification } from 'maplibre-gl';
 import AddSourceModal from '../AddSourceModal/AddSourceModal';
+import { validateUrl, validateTileUrl, validateZoomLevel } from '../../lib/validators';
 
 type SourcesProps = {
   savePrevStyle: (newStyle: maplibregl.StyleSpecification | undefined) => void;
@@ -21,6 +22,8 @@ const SOURCE_TYPES = [
   { label: 'video', value: 'video' },
 ];
 
+type SourceErrors = Record<string, { url?: string; tiles?: string; minzoom?: string; maxzoom?: string }>;
+
 const SourceEditor: React.FC<SourcesProps> = ({ savePrevStyle }) => {
   const [style, setStyle] = useAtom(styleAtom);
   const [modalOpen, setModalOpen] = useState(false);
@@ -28,6 +31,7 @@ const SourceEditor: React.FC<SourcesProps> = ({ savePrevStyle }) => {
   const [targetSourceId, setTargetSourceId] = useState<string | null>(null);
   const [referencedLayers, setReferencedLayers] = useState<LayerSpecification[]>([]);
   const [editSources, setEditSources] = useState<Record<string, Partial<SourceSpecification & { url?: string, attribution?: string, tiles?: string[] }>>>({});
+  const [sourceErrors, setSourceErrors] = useState<SourceErrors>({});
 
   // sourcesを取得
   const sources = useMemo(() => (typeof style === 'object' && style?.sources) ?? {}, [style]);
@@ -47,6 +51,11 @@ const SourceEditor: React.FC<SourcesProps> = ({ savePrevStyle }) => {
       ...prev,
       [sourceId]: { ...prev[sourceId], [key]: value }
     }));
+    // 入力時にそのフィールドのエラーをクリア
+    setSourceErrors(prev => ({
+      ...prev,
+      [sourceId]: { ...prev[sourceId], [key]: undefined }
+    }));
   };
 
   // 保存
@@ -56,6 +65,48 @@ const SourceEditor: React.FC<SourcesProps> = ({ savePrevStyle }) => {
         message.error('スタイルが正しく読み込まれていません');
         return;
       }
+
+      // バリデーション
+      const newErrors: SourceErrors = {};
+      let hasError = false;
+      Object.entries(editSources).forEach(([id, src]) => {
+        const errs: SourceErrors[string] = {};
+        // URL バリデーション
+        if (src.url) {
+          const urlResult = validateUrl(src.url);
+          if (!urlResult.valid) { errs.url = urlResult.message; hasError = true; }
+        }
+        // tiles バリデーション
+        if (src.tiles && Array.isArray(src.tiles)) {
+          for (const tile of src.tiles) {
+            const tileResult = validateTileUrl(tile);
+            if (!tileResult.valid) { errs.tiles = tileResult.message; hasError = true; break; }
+          }
+        }
+        // minzoom バリデーション
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const minzoom = (src as any).minzoom;
+        const minzoomResult = validateZoomLevel(minzoom);
+        if (!minzoomResult.valid) { errs.minzoom = minzoomResult.message; hasError = true; }
+        // maxzoom バリデーション
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const maxzoom = (src as any).maxzoom;
+        const maxzoomResult = validateZoomLevel(maxzoom);
+        if (!maxzoomResult.valid) { errs.maxzoom = maxzoomResult.message; hasError = true; }
+        // minzoom <= maxzoom
+        if (minzoom !== undefined && maxzoom !== undefined && !errs.minzoom && !errs.maxzoom && minzoom > maxzoom) {
+          errs.minzoom = 'minzoomはmaxzoom以下にしてください';
+          hasError = true;
+        }
+        if (Object.keys(errs).length > 0) newErrors[id] = errs;
+      });
+
+      if (hasError) {
+        setSourceErrors(newErrors);
+        message.error('入力内容にエラーがあります');
+        return;
+      }
+
       const newSources: Record<string, SourceSpecification> = {};
       Object.entries(editSources).forEach(([id, src]) => {
         // type, url, attribution など必要な項目のみ
@@ -70,6 +121,7 @@ const SourceEditor: React.FC<SourcesProps> = ({ savePrevStyle }) => {
       const newStyle = { ...style!, sources: newSources };
       savePrevStyle(style);
       setStyle(newStyle);
+      setSourceErrors({});
       message.success('sourcesを保存しました');
     } catch {
       message.error('保存に失敗しました');
@@ -187,28 +239,36 @@ const SourceEditor: React.FC<SourcesProps> = ({ savePrevStyle }) => {
                     />
                   </div>
                   {source.tiles && Array.isArray(source.tiles) && source.tiles.length > 0 ? (
-                    <Input
-                      addonBefore="tiles"
-                      placeholder="tiles（カンマ区切り可）"
-                      value={Array.isArray(source.tiles) ? source.tiles.join(',') : ''}
-                      onChange={e =>
-                        handleChange(
-                          sourceId,
-                          'tiles',
-                          e.target.value
-                            ? e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                            : undefined
-                        )
-                      }
-                    />
+                    <div>
+                      <Input
+                        addonBefore="tiles"
+                        placeholder="tiles（カンマ区切り可）"
+                        value={Array.isArray(source.tiles) ? source.tiles.join(',') : ''}
+                        onChange={e =>
+                          handleChange(
+                            sourceId,
+                            'tiles',
+                            e.target.value
+                              ? e.target.value.split(',').map(s => s.trim()).filter(Boolean)
+                              : undefined
+                          )
+                        }
+                        status={sourceErrors[sourceId]?.tiles ? 'error' : undefined}
+                      />
+                      {sourceErrors[sourceId]?.tiles && <Text type="danger" style={{ fontSize: 12 }}>{sourceErrors[sourceId].tiles}</Text>}
+                    </div>
                   ) : (
                     (!source.type || source.type !== 'geojson') && (
-                      <Input
-                        addonBefore="url"
-                        placeholder="url"
-                        value={(source as Partial<SourceSpecification & { url?: string }>).url ?? ''}
-                        onChange={e => handleChange(sourceId, 'url', e.target.value)}
-                      />
+                      <div>
+                        <Input
+                          addonBefore="url"
+                          placeholder="url"
+                          value={(source as Partial<SourceSpecification & { url?: string }>).url ?? ''}
+                          onChange={e => handleChange(sourceId, 'url', e.target.value)}
+                          status={sourceErrors[sourceId]?.url ? 'error' : undefined}
+                        />
+                        {sourceErrors[sourceId]?.url && <Text type="danger" style={{ fontSize: 12 }}>{sourceErrors[sourceId].url}</Text>}
+                      </div>
                     )
                   )
                   }
@@ -218,22 +278,30 @@ const SourceEditor: React.FC<SourcesProps> = ({ savePrevStyle }) => {
                     value={source.attribution ?? ''}
                     onChange={e => handleChange(sourceId, 'attribution', e.target.value)}
                   />
-                  <Input
-                    addonBefore="minzoom"
-                    placeholder="minzoom"
-                    type="number"
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    value={(source as any).minzoom ?? ''}
-                    onChange={e => handleChange(sourceId, 'minzoom', e.target.value === '' ? undefined : Number(e.target.value))}
-                  />
-                  <Input
-                    addonBefore="maxzoom"
-                    placeholder="maxzoom"
-                    type="number"
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    value={(source as any).maxzoom ?? ''}
-                    onChange={e => handleChange(sourceId, 'maxzoom', e.target.value === '' ? undefined : Number(e.target.value))}
-                  />
+                  <div>
+                    <Input
+                      addonBefore="minzoom"
+                      placeholder="minzoom (0〜24)"
+                      type="number"
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      value={(source as any).minzoom ?? ''}
+                      onChange={e => handleChange(sourceId, 'minzoom', e.target.value === '' ? undefined : Number(e.target.value))}
+                      status={sourceErrors[sourceId]?.minzoom ? 'error' : undefined}
+                    />
+                    {sourceErrors[sourceId]?.minzoom && <Text type="danger" style={{ fontSize: 12 }}>{sourceErrors[sourceId].minzoom}</Text>}
+                  </div>
+                  <div>
+                    <Input
+                      addonBefore="maxzoom"
+                      placeholder="maxzoom (0〜24)"
+                      type="number"
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      value={(source as any).maxzoom ?? ''}
+                      onChange={e => handleChange(sourceId, 'maxzoom', e.target.value === '' ? undefined : Number(e.target.value))}
+                      status={sourceErrors[sourceId]?.maxzoom ? 'error' : undefined}
+                    />
+                    {sourceErrors[sourceId]?.maxzoom && <Text type="danger" style={{ fontSize: 12 }}>{sourceErrors[sourceId].maxzoom}</Text>}
+                  </div>
                 </Space>
               </Space>
             );

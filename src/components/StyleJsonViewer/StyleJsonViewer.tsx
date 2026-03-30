@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Button, Card, Input, message, Space, Tooltip } from 'antd';
+import { Button, Card, Input, message, Space, Tooltip, Typography } from 'antd';
 import { useAtom } from 'jotai';
 import { styleAtom } from '../../atom';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { CheckOutlined, CloseOutlined, EditOutlined } from '@ant-design/icons';
+import { validateJson } from '../../lib/validators';
+
+const { Text } = Typography;
 
 type StyleJsonViewerProps = {
     savePrevStyle: (newStyle: maplibregl.StyleSpecification | undefined) => void
@@ -14,27 +17,38 @@ const StyleJsonViewer: React.FC<StyleJsonViewerProps> = ({ savePrevStyle }) => {
   const [style, setStyle] = useAtom(styleAtom);
   const [editing, setEditing] = useState(false);
   const [code, setCode] = useState(() => JSON.stringify(style, null, 2));
+  const [jsonError, setJsonError] = useState<string | undefined>(undefined);
 
   // 編集モード切替時に最新のstyleを反映
   const handleEdit = () => {
     setCode(JSON.stringify(style, null, 2));
+    setJsonError(undefined);
     setEditing(true);
   };
 
   const handleSave = () => {
+    const result = validateJson(code);
+    if (!result.valid) {
+      setJsonError(result.message);
+      message.error(result.message ?? 'JSONの形式が正しくありません');
+      return;
+    }
     try {
       const parsed = JSON.parse(code);
       setStyle(parsed);
       setEditing(false);
+      setJsonError(undefined);
       message.success('style.jsonを更新しました');
       savePrevStyle(parsed);
     } catch {
+      setJsonError('JSONの形式が正しくありません');
       message.error('JSONの形式が正しくありません');
     }
   };
 
   const handleCancel = () => {
     setCode(JSON.stringify(style, null, 2));
+    setJsonError(undefined);
     setEditing(false);
   };
 
@@ -73,18 +87,22 @@ const StyleJsonViewer: React.FC<StyleJsonViewerProps> = ({ savePrevStyle }) => {
       }</Space>
       <div style={{ width: '100%', maxHeight: 'calc(100% - 40px)', overflowY: 'scroll' }}>
         {editing ? (
-          <Input.TextArea
-            value={code}
-            onChange={e => setCode(e.target.value)}
-            autoSize={{ minRows: 20 }}
-            style={{
-              width: '100%',
-              fontSize: 14,
-              background: '#1e1e1e',
-              color: '#fff',
-              border: 'none',
-            }}
-          />
+          <div>
+            {jsonError && <Text type="danger" style={{ fontSize: 12, display: 'block', marginBottom: 4, padding: '0 4px' }}>{jsonError}</Text>}
+            <Input.TextArea
+              value={code}
+              onChange={e => { setCode(e.target.value); setJsonError(undefined); }}
+              autoSize={{ minRows: 20 }}
+              status={jsonError ? 'error' : undefined}
+              style={{
+                width: '100%',
+                fontSize: 14,
+                background: '#1e1e1e',
+                color: '#fff',
+                border: 'none',
+              }}
+            />
+          </div>
         ) : (
           <SyntaxHighlighter language="json" style={vscDarkPlus}>
             {JSON.stringify(style, null, 2)}

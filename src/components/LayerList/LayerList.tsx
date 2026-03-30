@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Input, Spin } from 'antd';
+import { Input, Spin, message } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import { mapAtom, styleAtom } from '../../atom';
 import { groupLayersByType } from '../../utils/layerControl';
@@ -10,6 +10,7 @@ import {
   type RowComponentProps
 } from "react-window";
 import type { EditingType, FieldType } from './LayerList.types';
+import { validateJson } from '../../lib/validators';
 import './LayerList.css';
 
 
@@ -108,6 +109,14 @@ const LayerList: React.FC<LayerListProps> = ({ savePrevStyle, addLayer }) => {
     // 編集保存
     const handleSave = useCallback((layerId: string, field: 'filter' | 'paint' | 'layout', value: string) => {
         if (typeof style === 'string') { return; }
+        // JSON バリデーション
+        if (value) {
+            const jsonResult = validateJson(value);
+            if (!jsonResult.valid) {
+                message.error(jsonResult.message ?? 'JSONの形式が正しくありません');
+                return;
+            }
+        }
         try {
             const newValue = value ? JSON.parse(value) : undefined;
             const nowLngLat = map?.getCenter()
