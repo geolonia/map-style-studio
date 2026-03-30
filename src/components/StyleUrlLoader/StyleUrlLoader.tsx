@@ -1,8 +1,11 @@
 import React, { useState, useRef } from 'react';
-import { Input, Button, Space, message, type InputRef } from 'antd';
+import { Input, Button, Space, message, Typography, type InputRef } from 'antd';
 import { useAtom } from 'jotai';
 import { styleAtom } from '../../atom';
+import { validateUrl } from '../../lib/validators';
 import './StyleUrlLoader.css';
+
+const { Text } = Typography;
 
 const HISTORY_KEY = 'styleUrlHistory';
 
@@ -27,12 +30,24 @@ const StyleUrlLoader: React.FC<Props> = ({ setLoadError }) => {
   const [loading, setLoading] = useState(false);
   const [history, setHistoryState] = useState<string[]>(getHistory());
   const [historyVisible, setHistoryVisible] = useState(false);
+  const [urlError, setUrlError] = useState<string | undefined>(undefined);
   const inputRef = useRef<InputRef>(null);
 
   const handleLoad = async () => {
-    if (!url || url.trim() === '' || !/\.json(\?.*)?$/i.test(url.trim())) {
+    if (!url || url.trim() === '') {
       message.warning('URLを入力してください');
       setUrl('');
+      setLoadError(true);
+      return;
+    }
+    const urlResult = validateUrl(url.trim());
+    if (!urlResult.valid) {
+      setUrlError(urlResult.message);
+      setLoadError(true);
+      return;
+    }
+    if (!/\.json(\?.*)?$/i.test(url.trim())) {
+      setUrlError('URLは .json で終わる必要があります');
       setLoadError(true);
       return;
     }
@@ -74,7 +89,7 @@ const StyleUrlLoader: React.FC<Props> = ({ setLoadError }) => {
         <Input
           ref={inputRef}
           value={url}
-          onChange={e => setUrl(e.target.value)}
+          onChange={e => { setUrl(e.target.value); setUrlError(undefined); }}
           placeholder="URL指定でstyleを読み込む"
           disabled={loading}
           className="style-url-loader-input"
@@ -82,6 +97,7 @@ const StyleUrlLoader: React.FC<Props> = ({ setLoadError }) => {
           onFocus={handleInputFocus}
           onBlur={handleInputBlur}
           autoComplete="off"
+          status={urlError ? 'error' : undefined}
         />
         <Button
           type="primary"
@@ -92,6 +108,7 @@ const StyleUrlLoader: React.FC<Props> = ({ setLoadError }) => {
           読み込む
         </Button>
       </Space.Compact>
+      {urlError && <Text type="danger" style={{ fontSize: 12, display: 'block', marginTop: 2 }}>{urlError}</Text>}
       {historyVisible && history.length > 0 && (
         <div className="style-url-loader-history-dropdown">
           {history.map((h, i) => (

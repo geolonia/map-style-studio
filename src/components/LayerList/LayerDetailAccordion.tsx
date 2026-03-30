@@ -3,6 +3,7 @@ import { Collapse, Flex, Tooltip, Button, Input, Typography } from 'antd';
 import { EditOutlined, CheckOutlined, CloseOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { LayerSpecification } from 'maplibre-gl';
 import { useColorfulJson } from '../../utils/renderColorfulJson';
+import { validateJson } from '../../lib/validators';
 
 const { Text } = Typography;
 
@@ -19,6 +20,7 @@ const LayerDetailAccordion: React.FC<Props> = ({ layer, editing, onEdit, onReset
   const [localValue, setLocalValue] = useState<string>('');
   const [localEditing, setLocalEditing] = useState<{ layerId: string; field: 'filter' | 'paint' | 'layout' | null } | null>(null);
   const [activeKey, setActiveKey] = useState<string[]>([]);
+  const [jsonError, setJsonError] = useState<string | undefined>(undefined);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const jsonStr = JSON.stringify((layer as any)['paint'], null, 2) || '';
@@ -26,11 +28,18 @@ const LayerDetailAccordion: React.FC<Props> = ({ layer, editing, onEdit, onReset
 
   const handleSave = (e: React.MouseEvent<HTMLElement>, field: 'filter' | 'paint' | 'layout', localValue: string) => {
     e.stopPropagation();
+    const result = validateJson(localValue);
+    if (!result.valid) {
+      setJsonError(result.message);
+      return;
+    }
+    setJsonError(undefined);
     onSave(field, localValue);
   };
 
   const handleCancel = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
+    setJsonError(undefined);
     onCancel();
   };
 
@@ -110,12 +119,16 @@ const LayerDetailAccordion: React.FC<Props> = ({ layer, editing, onEdit, onReset
       </Flex>
     ),
     children: localEditing?.layerId === layer.id && localEditing?.field === field ? (
-      <Input.TextArea
-        value={localValue}
-        onChange={e => setLocalValue(e.target.value)}
-        autoSize={{ minRows: 4 }}
-        style={{ backgroundColor: '#fbfbfb' }}
-      />
+      <div>
+        <Input.TextArea
+          value={localValue}
+          onChange={e => { setLocalValue(e.target.value); setJsonError(undefined); }}
+          autoSize={{ minRows: 4 }}
+          style={{ backgroundColor: '#fbfbfb' }}
+          status={jsonError ? 'error' : undefined}
+        />
+        {jsonError && <Text type="danger" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>{jsonError}</Text>}
+      </div>
     ) : (
       <pre style={{ whiteSpace: 'pre-wrap' }}>
         {

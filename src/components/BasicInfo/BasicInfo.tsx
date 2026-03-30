@@ -2,6 +2,7 @@ import React, { useCallback, useEffect } from 'react';
 import { Input, Button, Form, Space, message, Card } from 'antd';
 import { useAtom } from 'jotai';
 import { styleAtom } from '../../atom';
+import { validateCoordinates, validateZoomLevel } from '../../lib/validators';
 
 const BasicInfo: React.FC = () => {
     const [style, setStyle] = useAtom(styleAtom);
@@ -52,10 +53,30 @@ const BasicInfo: React.FC = () => {
                 <Form.Item label="スタイル名" name="name">
                     <Input placeholder="style.jsonのname" />
                 </Form.Item>
-                <Form.Item label="中心座標(center)" name="center">
+                <Form.Item
+                    label="中心座標(center)"
+                    name="center"
+                    rules={[{
+                        validator: (_, value) => {
+                            if (!value) return Promise.resolve();
+                            const result = validateCoordinates(value);
+                            return result.valid ? Promise.resolve() : Promise.reject(new Error(result.message));
+                        }
+                    }]}
+                >
                     <Input placeholder="例: 139.767,35.681" />
                 </Form.Item>
-                <Form.Item label="ズーム(zoom)" name="zoom">
+                <Form.Item
+                    label="ズーム(zoom)"
+                    name="zoom"
+                    rules={[{
+                        validator: (_, value) => {
+                            if (value === '' || value === undefined || value === null) return Promise.resolve();
+                            const result = validateZoomLevel(Number(value));
+                            return result.valid ? Promise.resolve() : Promise.reject(new Error(result.message));
+                        }
+                    }]}
+                >
                     <Input type="number" placeholder="例: 10" />
                 </Form.Item>
                 <Form.Item>

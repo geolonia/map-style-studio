@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Form, Input, Select, type FormInstance } from 'antd';
 import type { LayerSpecification } from 'maplibre-gl';
+import { validateJson } from '../../lib/validators';
 
 type AddLayerModalProps = {
   open: boolean;
@@ -83,6 +84,13 @@ const AddLayerModal: React.FC<AddLayerModalProps> = ({
         label="filter (JSON形式)"
         name="filter"
         tooltip='例: ["==", "class", "A"]'
+        rules={[{
+          validator: (_, value) => {
+            if (!value) return Promise.resolve();
+            const result = validateJson(value);
+            return result.valid ? Promise.resolve() : Promise.reject(new Error(result.message));
+          }
+        }]}
       >
         <Input.TextArea rows={2} placeholder='["==", "class", "A"]' />
       </Form.Item>
@@ -90,6 +98,13 @@ const AddLayerModal: React.FC<AddLayerModalProps> = ({
         label="paint (JSON形式)"
         name="paint"
         tooltip='例: {"circle-color": "#ff0000"}'
+        rules={[{
+          validator: (_, value) => {
+            if (!value) return Promise.resolve();
+            const result = validateJson(value);
+            return result.valid ? Promise.resolve() : Promise.reject(new Error(result.message));
+          }
+        }]}
       >
         <Input.TextArea rows={2} placeholder='{"circle-color": "#ff0000"}' />
       </Form.Item>
@@ -97,6 +112,13 @@ const AddLayerModal: React.FC<AddLayerModalProps> = ({
         label="layout (JSON形式)"
         name="layout"
         tooltip='例: {"icon-image": "my-icon"}'
+        rules={[{
+          validator: (_, value) => {
+            if (!value) return Promise.resolve();
+            const result = validateJson(value);
+            return result.valid ? Promise.resolve() : Promise.reject(new Error(result.message));
+          }
+        }]}
       >
         <Input.TextArea rows={2} placeholder='{"icon-image": "my-icon"}' />
       </Form.Item>
