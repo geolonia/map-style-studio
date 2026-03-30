@@ -16,6 +16,7 @@ import BasicInfo from '../BasicInfo/BasicInfo';
 import LayerEditor from '../LayerEditor/LayerEditor';
 import SourceEditor from '../SourceEditor/SourceEditor';
 import AddLayerModal from '../AddLayerModal/AddLayerModal';
+import { generateColorByIndex, generatePaintWithAutoColor } from '../../utils/generateAutoColor';
 
 const { Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -45,6 +46,18 @@ const StyleEditor: React.FC = () => {
   const handleAddLayerOk = () => {
     addLayerForm.validateFields().then(values => {
       if (!style || typeof style === 'string') { return; }
+
+      // ユーザーが paint を指定していない場合、自動で色を付与する
+      const existingLayerCount = style?.layers?.length ?? 0;
+      const layerType = addLayerGroupType ?? 'fill';
+      let paint: Record<string, unknown>;
+      if (values.paint) {
+        paint = JSON.parse(values.paint);
+      } else {
+        const autoColor = generateColorByIndex(existingLayerCount);
+        paint = generatePaintWithAutoColor(layerType, autoColor);
+      }
+
       const newLayer = {
         id: values.id,
         type: addLayerGroupType,
@@ -52,7 +65,7 @@ const StyleEditor: React.FC = () => {
         'source-layer': values.sourceLayer,
         layout: values.layout ? JSON.parse(values.layout) : {},
         filter: values.filter ? JSON.parse(values.filter) : undefined,
-        paint: values.paint ? JSON.parse(values.paint) : {},
+        paint,
       };
       const newStyle = {
         ...style,
