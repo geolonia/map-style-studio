@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Collapse, Flex, Tooltip, Button, Input, Typography } from 'antd';
+import { Collapse, Flex, Tooltip, Button, Input, Typography, Space } from 'antd';
 import { EditOutlined, CheckOutlined, CloseOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { LayerSpecification } from 'maplibre-gl';
 import { useColorfulJson } from '../../utils/renderColorfulJson';
@@ -131,11 +131,11 @@ const LayerDetailAccordion: React.FC<Props> = ({ layer, editing, onEdit, onReset
   }));
 
   return (
-    <Collapse 
-      ghost 
-      size="small" 
-      style={{ width: '100%', padding: 0 }} 
-      items={items} 
+    <Collapse
+      ghost
+      size="small"
+      style={{ width: '100%', padding: 0 }}
+      items={items}
       activeKey={activeKey}
       onChange={keys => setActiveKey(Array.isArray(keys) ? keys : [keys])}
     />
