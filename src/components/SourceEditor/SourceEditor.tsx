@@ -47,7 +47,6 @@ const SourceEditor: React.FC<SourcesProps> = ({ savePrevStyle }) => {
 
     // keyがsourceIdの場合はそのまま設定
     if (key === 'sourceId' && value && typeof value === 'string' && value.trim() !== '') {
-      console.log(`sourceId変更: ${sourceId} -> ${value}`);
       newSources = { ...editSources };
       newSources[value] = { ...newSources[sourceId] };
       delete newSources[sourceId];

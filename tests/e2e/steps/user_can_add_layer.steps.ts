@@ -11,7 +11,7 @@ When('レイヤー追加ボタンをクリックする', async function () {
 });
 
 Then('レイヤー追加モーダルが表示される', async function () {
-  await expect(this.page.getByText('レイヤーを追加')).toBeVisible();
+  await expect(this.page.getByText('新規レイヤーを追加')).toBeVisible();
 });
 
 When('レイヤーIDに {string} と入力する', async function (layerId: string) {
@@ -19,7 +19,8 @@ When('レイヤーIDに {string} と入力する', async function (layerId: stri
 });
 
 When('タイプに {string} を選択する', async function (type: string) {
-  await this.page.getByTestId('layer-type-select').selectOption(type);
+  await this.page.getByTestId('layer-type-select').click();
+  await this.page.getByText(type, { exact: true }).click();
 });
 
 When('追加ボタンをクリックする', async function () {

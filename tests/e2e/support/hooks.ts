@@ -5,5 +5,9 @@ Before(async function () {
 });
 
 After(async function () {
-  await this.closeBrowser();
+  try {
+    await this.closeBrowser();
+  } catch (error) {
+    console.error('Browser cleanup failed:', error);
+  }
 });
