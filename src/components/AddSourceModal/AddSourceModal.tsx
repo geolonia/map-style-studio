@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Modal, Space, Select, Input, message } from 'antd';
+import { Modal, Space, Select, Input, message, Button, Tag, Spin, Typography } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 import type { SourceSpecification } from 'maplibre-gl';
+import { useSourceLayers } from '../../hooks/useSourceLayers';
 
 const SOURCE_TYPES = [
   { label: 'vector', value: 'vector' },
@@ -27,8 +29,11 @@ const initialState = {
   maxzoom: undefined,
 };
 
+const { Text } = Typography;
+
 const AddSourceModal: React.FC<AddSourceModalProps> = ({ open, onOk, onCancel }) => {
   const [newSource, setNewSource] = useState(initialState);
+  const { layers: sourceLayers, loading: sourceLayersLoading, error: sourceLayersError, fetchLayers } = useSourceLayers(newSource.url);
 
   const handleChange = (key: string, value: string | number | string[] | undefined) => {
     setNewSource(prev => ({
@@ -51,6 +56,11 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ open, onOk, onCancel })
     onOk(sourceId, sourceSpec as SourceSpecification);
     setNewSource(initialState);
   };
+
+  const showUrlField = newSource.type !== 'video';
+  const showTilesField = newSource.type !== 'geojson' && newSource.type !== 'image';
+  const isVectorType = newSource.type === 'vector';
+  const hasUrl = newSource.url.trim().length > 0;
 
   return (
     <Modal
@@ -80,15 +90,51 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ open, onOk, onCancel })
             allowClear
           />
         </div>
-        {(newSource.type !== 'video') && (
-          <Input
-            addonBefore={newSource.type === 'geojson' ? "data" : "url"}
-            placeholder={"url" + (newSource.type === 'geojson' ? "またはdataを指定" : "")}
-            value={newSource.url ?? ''}
-            onChange={e => handleChange('url', e.target.value)}
-          />
+        {showUrlField && (
+          <Space.Compact style={{ width: '100%' }}>
+            <Input
+              addonBefore={newSource.type === 'geojson' ? "data" : "url"}
+              placeholder={"url" + (newSource.type === 'geojson' ? "またはdataを指定" : "")}
+              value={newSource.url ?? ''}
+              onChange={e => handleChange('url', e.target.value)}
+            />
+            {isVectorType && (
+              <Button
+                type="primary"
+                icon={<SearchOutlined />}
+                loading={sourceLayersLoading}
+                disabled={!hasUrl}
+                onClick={fetchLayers}
+                aria-label="source-layerを取得"
+              >
+                取得
+              </Button>
+            )}
+          </Space.Compact>
         )}
-        {(newSource.type !== 'geojson' && newSource.type !== 'image') && (
+        {isVectorType && sourceLayers.length > 0 && (
+          <div>
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              取得された source-layer ({sourceLayers.length}件):
+            </Text>
+            <div style={{ marginTop: 4 }}>
+              {sourceLayers.map(layer => (
+                <Tag key={layer} color="blue" style={{ marginBottom: 4 }}>
+                  {layer}
+                </Tag>
+              ))}
+            </div>
+          </div>
+        )}
+        {isVectorType && sourceLayersLoading && (
+          <Spin size="small" />
+        )}
+        {isVectorType && sourceLayersError && (
+          <Text type="danger" style={{ fontSize: 12 }}>
+            {sourceLayersError}
+          </Text>
+        )}
+        {showTilesField && (
           <Input
             addonBefore={newSource.type === 'video' ? "urls" : "tiles"}
             placeholder="カンマ区切りで複数指定"
