@@ -37,8 +37,14 @@ export function validateTileUrl(value: string): ValidationResult {
   if (value === '') return ok();
   const trimmed = value.trim();
   if (trimmed === '') return ng('有効なURLを入力してください');
-  // mapbox:// は URL として解釈できないため個別に許可する
-  if (/^mapbox:\/\/.+/i.test(trimmed)) return ok();
+  // mapbox:// は URL として解釈できないため個別に許可する。
+  // ただしリソース識別子が無いもの（mapbox:// や mapbox:///）は拒否する。
+  if (/^mapbox:\/\//i.test(trimmed)) {
+    const resource = trimmed.slice('mapbox://'.length).trim();
+    return resource !== '' && !resource.startsWith('/') && !resource.startsWith('?')
+      ? ok()
+      : ng('有効なURLを入力してください');
+  }
   try {
     const url = new URL(trimmed);
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {

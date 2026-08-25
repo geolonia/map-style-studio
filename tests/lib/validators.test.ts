@@ -33,6 +33,13 @@ describe('validateTileUrl', () => {
     expect(validateTileUrl('https://').valid).toBe(false);
   });
 
+  it('リソース識別子のない mapbox:// を拒否すること', () => {
+    expect(validateTileUrl('mapbox://').valid).toBe(false);
+    expect(validateTileUrl('mapbox:///').valid).toBe(false);
+    expect(validateTileUrl('mapbox://  ').valid).toBe(false);
+    expect(validateTileUrl('mapbox://?').valid).toBe(false);
+  });
+
   it('http/https/mapbox 以外のスキームを拒否すること', () => {
     expect(validateTileUrl('javascript://example.com').valid).toBe(false);
     expect(validateTileUrl('ftp://example.com/tiles').valid).toBe(false);
