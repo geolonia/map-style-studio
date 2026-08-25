@@ -46,7 +46,6 @@ const LayerListItem: React.FC<Props> = ({ layer, editing, onEdit, onResetStyle, 
           </Tooltip>
         </Flex>
       </Flex>
-      </Flex>
       <span>
         {'source' in layer && (
           <>
