@@ -49,7 +49,6 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ open, onOk, onCancel })
     }
     const { sourceId, ...sourceSpec } = newSource;
     const sanitized = sanitizeSourceSpec(sourceSpec);
-    console.log('追加するソース:', sourceId, sanitized, newSource);
     onOk(sourceId, sanitized as SourceSpecification);
     setNewSource(initialState);
   };

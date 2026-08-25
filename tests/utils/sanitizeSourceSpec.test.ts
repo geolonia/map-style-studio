@@ -47,15 +47,16 @@ describe('sanitizeSourceSpec', () => {
     const input = {
       type: 'raster' as const,
       url: '',
-      attribution: '',
+      attribution: null,
       minzoom: undefined,
     };
     const result = sanitizeSourceSpec(input);
     expect(result).toEqual({
       type: 'raster',
       url: '',
-      attribution: '',
+      attribution: null,
     });
+    expect('attribution' in result).toBe(true);
     expect('minzoom' in result).toBe(false);
   });
 });
