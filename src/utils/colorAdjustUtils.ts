@@ -105,3 +105,16 @@ export function adjustStyleSaturation(
     layers: newLayers ?? style.layers
   };
 }
+
+/**
+ * 調整前の基準スタイルに、明度と彩度の現在値をまとめて適用する。
+ * 調整後のスタイルに重ねると値が累積してスライダーの表示と実際の見た目がずれるため、
+ * 呼び出し側は常に基準スタイルを渡す。
+ */
+export function applyAppearanceAdjustments(
+  baseStyle: StyleSpecification,
+  brightness: number,
+  saturation: number
+): StyleSpecification {
+  return adjustStyleSaturation(adjustStyleBrightness(baseStyle, brightness), saturation);
+}
