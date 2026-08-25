@@ -60,7 +60,7 @@ const StyleEditor: React.FC = () => {
 
       const newLayer = {
         id: values.id,
-        type: addLayerGroupType,
+        type: layerType,
         source: values.source,
         'source-layer': values.sourceLayer,
         layout: values.layout ? JSON.parse(values.layout) : {},
