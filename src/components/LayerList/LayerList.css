@@ -1,0 +1,15 @@
+#root {
+    --searchbar-height: 48px;
+}
+
+.layer-list {
+    height: calc(100% - var(--searchbar-height));
+    margin-top: 4px;
+    box-sizing: border-box;
+    padding: 0;
+}
+
+.layer-list > div{
+    height: 100% !important;
+    padding: 0;
+}

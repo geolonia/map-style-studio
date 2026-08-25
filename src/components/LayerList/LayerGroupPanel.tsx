@@ -3,6 +3,7 @@ import { Collapse, Flex, Tooltip, Button, Typography, List } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import LayerListItem from './LayerListItem';
 import type { LayerSpecification } from 'maplibre-gl';
+import type { EditingType, FieldType } from './LayerList.types';
 
 const { Text } = Typography;
 
@@ -18,11 +19,11 @@ type Props = {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         layers: any[];
     };
-    editing: { layerId: string; field: 'filter' | 'paint' | 'layout' | null; value: string } | null;
-    onEdit: (layerId: string, field: 'filter' | 'paint' | 'layout') => void;
-    onResetStyle: (field: 'filter' | 'paint' | 'layout') => void;
+    editing: EditingType | null;
+    onEdit: (layerId: string, field: FieldType) => void;
+    onResetStyle: (field: FieldType) => void;
     onDeleteLayer: (layerId: string) => void;
-    onSave: (layerId: string, field: 'filter' | 'paint' | 'layout', value: string) => void;
+    onSave: (layerId: string, field: FieldType, value: string) => void;
     onCancel: () => void;
     onDeleteAllLayers: (groupType: string) => void;
     onAddLayer: (groupType: string) => void;

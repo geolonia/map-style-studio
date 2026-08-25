@@ -52,7 +52,7 @@ const AddLayerModal: React.FC<AddLayerModalProps> = ({
             }
           }}
         >
-          {layers.map(layer => (
+          {layers && layers.map(layer => (
             <Select.Option key={layer.id} value={layer.id}>
               {layer.id}
             </Select.Option>

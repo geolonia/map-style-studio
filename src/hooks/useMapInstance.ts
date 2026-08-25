@@ -16,7 +16,7 @@ export function useMapInstance(
 
     const center = map?.getCenter() || [139.767, 35.681] as [number, number];
     const zoom = map?.getZoom() || 10;
-  
+    console.log(style);
     // mapオブジェクトがなければ新規生成
     const mapObj = new maplibregl.Map({
       container: containerRef.current,

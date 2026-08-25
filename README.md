@@ -1,54 +1,24 @@
-# React + TypeScript + Vite
+## スタイル編集ツールについて
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+このプロジェクトは、地図のスタイル（MapLibre GL形式）をReactで編集できるWebツールです。  
+レイヤーやソースの追加・編集、色や明度・彩度の調整、スタイルJSONのダウンロードなどが可能です。
 
-Currently, two official plugins are available:
+### 主な機能
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 地図スタイルのリアルタイム編集・プレビュー
+- レイヤー・ソースの追加・削除・編集
+- 色（テーマ・カテゴリ別）、明度・彩度の一括調整
+- 住所検索による地図移動
+- 編集したスタイルのJSONダウンロード・アップロード
+- サンプルスタイルの読み込み
 
-## Expanding the ESLint configuration
+### 使い方
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. サイドバーから編集したい項目（基本情報・ソース・レイヤー・スタイルJSON）を選択
+2. レイヤーや色を編集すると、地図に即時反映
+3. 明度・彩度タブで地図全体の色味を調整
+4. 編集内容は「styleダウンロード」ボタンでJSONとして保存可能
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+地図デザインを直感的に編集したい方

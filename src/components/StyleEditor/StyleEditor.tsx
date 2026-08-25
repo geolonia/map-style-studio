@@ -16,6 +16,7 @@ import BasicInfo from '../BasicInfo/BasicInfo';
 import LayerEditor from '../LayerEditor/LayerEditor';
 import SourceEditor from '../SourceEditor/SourceEditor';
 import AddLayerModal from '../AddLayerModal/AddLayerModal';
+import { useCreateEmptyStyle } from '../../hooks/useCreateEmptyStyle';
 
 const { Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -25,6 +26,7 @@ const StyleEditor: React.FC = () => {
   const [selectedMenu, setSelectedMenu] = useState('layer');
   const [style, setStyle] = useAtom(styleAtom);
   const prevStyleRef = React.useRef<typeof style | null>(null);
+  const { emptyStyle } = useCreateEmptyStyle();
 
   // style.json読み込みエラー状態
   const [loadError, setLoadError] = useState(false);
@@ -111,6 +113,10 @@ const StyleEditor: React.FC = () => {
     setLoadError(false);
   };
 
+  const handleCreateEmptyStyle = () => {
+    setStyle(emptyStyle);
+  }
+
   // サイドバー内で表示するコンポーネントを切り替え
   let sidebarContent = null;
   if (selectedMenu === 'basic-info') {
@@ -169,6 +175,15 @@ const StyleEditor: React.FC = () => {
                 {loadError && (
                   <Text type="danger" strong>スタイルの読み込みに失敗しました</Text>
                 )}
+                <Button
+                  type="primary" 
+                  size='large'
+                  icon={<FileOutlined />}
+                  onClick={handleCreateEmptyStyle}
+                >
+                  styleを作成する
+                </Button>
+                <Text strong>OR</Text>
                 <Button
                   type="default" 
                   size='large'

@@ -1,10 +1,61 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Input, Space, Spin } from 'antd';
+import { Input, Spin } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
 import { mapAtom, styleAtom } from '../../atom';
 import { groupLayersByType } from '../../utils/layerControl';
 import LayerGroupPanel from './LayerGroupPanel';
 import { isLayerMatched } from '../../utils/searchHelpers';
+import {
+  List,
+  type RowComponentProps
+} from "react-window";
+import type { EditingType, FieldType } from './LayerList.types';
+import './LayerList.css';
+
+
+type LayerGroup = {
+  type: string;
+  label: string;
+  layers: maplibregl.LayerSpecification[];
+};
+
+type RowProps = {
+  layerGroups: LayerGroup[];
+  editing: EditingType | null;
+  handleEdit: (layerId: string, field: FieldType) => void;
+  handleResetStyle: (layerId: string, field: FieldType) => void;
+  handleDeleteLayer: (layerId: string) => void;
+  handleSave: (layerId: string, field: FieldType, value: string) => void;
+  handleCancel: () => void;
+  handleDeleteAllLayers: (groupType: string) => void;
+  addLayer: (groupType: string) => void;
+  filteredGroups: LayerGroup[];
+};
+
+function rowHeight() {
+  return 120;
+}
+
+function RowComponent({ index, filteredGroups, layerGroups, editing, handleEdit, handleResetStyle, handleDeleteLayer, handleSave, handleCancel, handleDeleteAllLayers, addLayer }: RowComponentProps<RowProps>) {
+  const group = filteredGroups[index];
+  return (
+    <div style={{marginBottom: '12px'}} key={group.type}>
+      <LayerGroupPanel
+        layerGroups={layerGroups}
+        group={group}
+        editing={editing}
+        onEdit={handleEdit}
+        onResetStyle={(field) => handleResetStyle(group.layers[0].id, field)}
+        onDeleteLayer={handleDeleteLayer}
+        onSave={handleSave}
+        onCancel={handleCancel}
+        onDeleteAllLayers={() => handleDeleteAllLayers(group.type)}
+        onAddLayer={() => addLayer(group.type)}
+      />
+    </div>
+  );
+}
+
 
 type LayerListProps = {
     savePrevStyle: (newStyle: maplibregl.StyleSpecification | undefined) => void;
@@ -88,7 +139,7 @@ const LayerList: React.FC<LayerListProps> = ({ savePrevStyle, addLayer }) => {
     }, [layers, style, map, setStyle, savePrevStyle]);
 
     // リセット処理（filter/paint/layoutをundefinedにする）
-    const handleResetStyle = useCallback((layerId: string, field: 'filter' | 'paint' | 'layout') => {
+    const handleResetStyle = useCallback((layerId: string, field: FieldType) => {
         if( typeof style === 'string' ) { return; }
         const newStyle = { ...style!, layers: layers.map((l) =>
             l.id === layerId
@@ -149,30 +200,31 @@ const LayerList: React.FC<LayerListProps> = ({ savePrevStyle, addLayer }) => {
 
     return (
         <Spin spinning={loading === 'loading'} tip="レイヤーを読み込み中..." style={{ width: '100%' }}>
-            <Space direction="vertical" style={{ width: '100%', padding: 0 }} size='small'>
-                <Input
-                    size="large"
-                    placeholder="レイヤー名、色、属性情報等で検索"
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                    allowClear
-                />
-                {filteredGroups.map(group => (
-                    <LayerGroupPanel
-                        key={group.type}
-                        layerGroups={layerGroups}
-                        group={group}
-                        editing={editing}
-                        onEdit={handleEdit}
-                        onResetStyle={(field) => handleResetStyle(group.layers[0].id, field)}
-                        onDeleteLayer={handleDeleteLayer}
-                        onSave={handleSave}
-                        onCancel={handleCancel}
-                        onDeleteAllLayers={() => handleDeleteAllLayers(group.type)}
-                        onAddLayer={() => addLayer(group.type)}   
-                    />
-                ))}
-            </Space>
+            <Input
+                size="large"
+                placeholder="レイヤー名、色、属性情報等で検索"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                allowClear
+            />
+            <List<RowProps>
+                rowComponent={RowComponent}
+                rowCount={filteredGroups.length}
+                rowHeight={rowHeight}
+                rowProps={{
+                    layerGroups,
+                    editing,
+                    handleEdit,
+                    handleResetStyle,
+                    handleDeleteLayer,
+                    handleSave,
+                    handleCancel,
+                    handleDeleteAllLayers,
+                    addLayer,
+                    filteredGroups
+                }}
+                className='layer-list'
+            />
         </Spin>
     );
 };

@@ -3,13 +3,14 @@ import { Input, Button, Space, Typography, Card, message, Modal, List, Flex, Sel
 import { PlusOutlined, CloseOutlined } from '@ant-design/icons';
 import { useAtom } from 'jotai';
 import { styleAtom } from '../../atom';
-import type { LayerSpecification, SourceSpecification } from 'maplibre-gl';
+import type { LayerSpecification, SourceSpecification, StyleSpecification } from 'maplibre-gl';
+import AddSourceModal from '../AddSourceModal/AddSourceModal';
 
 type SourcesProps = {
   savePrevStyle: (newStyle: maplibregl.StyleSpecification | undefined) => void;
 };
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const SOURCE_TYPES = [
   { label: 'vector', value: 'vector' },
@@ -23,9 +24,10 @@ const SOURCE_TYPES = [
 const SourceEditor: React.FC<SourcesProps> = ({ savePrevStyle }) => {
   const [style, setStyle] = useAtom(styleAtom);
   const [modalOpen, setModalOpen] = useState(false);
+  const [addSourceModalOpen, setAddSourceModalOpen] = useState(false);
   const [targetSourceId, setTargetSourceId] = useState<string | null>(null);
   const [referencedLayers, setReferencedLayers] = useState<LayerSpecification[]>([]);
-  const [editSources, setEditSources] = useState<Record<string, Partial<SourceSpecification & { url?: string, attribution?: string, tiles?: string[] }>>>( {});
+  const [editSources, setEditSources] = useState<Record<string, Partial<SourceSpecification & { url?: string, attribution?: string, tiles?: string[] }>>>({});
 
   // sourcesを取得
   const sources = useMemo(() => (typeof style === 'object' && style?.sources) ?? {}, [style]);
@@ -41,16 +43,23 @@ const SourceEditor: React.FC<SourcesProps> = ({ savePrevStyle }) => {
 
   // 入力変更
   const handleChange = (sourceId: string, key: string, value: string | string[] | number | undefined) => {
-    setEditSources(prev => ({
-      ...prev,
-      [sourceId]: { ...prev[sourceId], [key]: value }
-    }));
+    let newSources: Record<string, Partial<SourceSpecification>>;
+
+    // keyがsourceIdの場合はそのまま設定
+    if (key === 'sourceId' && value && typeof value === 'string' && value.trim() !== '') {
+      newSources = { ...editSources };
+      newSources[value] = { ...newSources[sourceId] };
+      delete newSources[sourceId];
+    } else {
+      newSources = { ...editSources, [sourceId]: { ...editSources[sourceId], [key]: value } };
+    }
+    setEditSources(newSources);
   };
 
   // 保存
   const handleSave = () => {
     try {
-      if(!style || typeof style !== 'object') {
+      if (!style || typeof style !== 'object') {
         message.error('スタイルが正しく読み込まれていません');
         return;
       }
@@ -76,7 +85,7 @@ const SourceEditor: React.FC<SourcesProps> = ({ savePrevStyle }) => {
 
   // ソース削除
   const handleDelete = (sourceId: string) => {
-    if(!style || typeof style !== 'object') {
+    if (!style || typeof style !== 'object') {
       message.error('スタイルが正しく読み込まれていません');
       return;
     }
@@ -99,6 +108,37 @@ const SourceEditor: React.FC<SourcesProps> = ({ savePrevStyle }) => {
     setStyle(newStyle);
     message.success(`"${sourceId}" を削除しました`);
   };
+
+  const handleAddModalOpen = () => {
+    setAddSourceModalOpen(true);
+  };
+
+  const handleAddSource = (sourceId: string, newSource: SourceSpecification) => {
+    if (sourceId === '') {
+      message.error('ソース名を入力してください');
+      return;
+    }
+    const newSources = {
+      ...(typeof style === 'object' ? style.sources : {}),
+      [sourceId]: newSource
+    };
+    const newStyle = {
+      ...((!style || typeof style !== 'object' || Object.keys(style).length === 0) ? {
+        version: 8,
+        sources: {},
+        layers: [],
+      } : style),
+      sources: newSources,
+    };
+    setEditSources(prev => ({
+      ...prev,
+      [sourceId]: { type: 'vector', url: '', attribution: '' }
+    }));
+    setStyle(newStyle as StyleSpecification);
+    message.success(`新しいソース "${sourceId}" を追加しました`);
+
+  };
+
 
   // モーダルで「一緒に削除」選択時
   const handleDeleteWithLayers = () => {
@@ -133,7 +173,11 @@ const SourceEditor: React.FC<SourcesProps> = ({ savePrevStyle }) => {
             return (
               <Space key={index} size="small" direction="vertical" style={{ width: '100%' }}>
                 <Flex justify='space-between' align='center' style={{ width: '100%' }}>
-                  <Title level={4} className='margin-none'>{sourceId}</Title>
+                  <Input
+                    value={sourceId}
+                    onChange={e => handleChange( sourceId, 'sourceId', e.target.value )}
+                    style={{ fontSize: 20, fontWeight: 'bold', width: 220, marginRight: 8 }}
+                  />
                   <Button
                     type="dashed"
                     shape="circle"
@@ -155,29 +199,29 @@ const SourceEditor: React.FC<SourcesProps> = ({ savePrevStyle }) => {
                   </div>
                   {source.tiles && Array.isArray(source.tiles) && source.tiles.length > 0 ? (
                     <Input
-                        addonBefore="tiles"
-                        placeholder="tiles（カンマ区切り可）"
-                        value={Array.isArray(source.tiles) ? source.tiles.join(',') : ''}
-                        onChange={e =>
+                      addonBefore="tiles"
+                      placeholder="tiles（カンマ区切り可）"
+                      value={Array.isArray(source.tiles) ? source.tiles.join(',') : ''}
+                      onChange={e =>
                         handleChange(
-                            sourceId,
-                            'tiles',
-                            e.target.value
+                          sourceId,
+                          'tiles',
+                          e.target.value
                             ? e.target.value.split(',').map(s => s.trim()).filter(Boolean)
                             : undefined
                         )
-                        }
+                      }
                     />
-                    ) : (
+                  ) : (
                     (!source.type || source.type !== 'geojson') && (
-                        <Input
+                      <Input
                         addonBefore="url"
                         placeholder="url"
                         value={(source as Partial<SourceSpecification & { url?: string }>).url ?? ''}
                         onChange={e => handleChange(sourceId, 'url', e.target.value)}
-                        />
+                      />
                     )
-                    )
+                  )
                   }
                   <Input
                     addonBefore="attribution"
@@ -209,8 +253,18 @@ const SourceEditor: React.FC<SourcesProps> = ({ savePrevStyle }) => {
           <Text type="secondary">sourcesが定義されていません</Text>
         )}
         <Button type='primary' onClick={handleSave}>保存</Button>
-        <Button type='default' icon={<PlusOutlined />} size='large'>ソースを追加</Button>
+        <Button
+          type='default'
+          icon={<PlusOutlined />}
+          size='large'
+          onClick={() => handleAddModalOpen()}
+        >ソースを追加</Button>
       </Space>
+      <AddSourceModal
+        open={addSourceModalOpen}
+        onOk={handleAddSource}
+        onCancel={() => setAddSourceModalOpen(false)}
+      />
       <Modal
         open={modalOpen}
         onOk={handleDeleteWithLayers}
