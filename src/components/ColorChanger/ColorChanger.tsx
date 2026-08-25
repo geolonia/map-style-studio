@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Tabs } from 'antd';
 import ThemeTabContent from './ThemeTabContent';
 import CategoryTabContent from './CategoryTabContent';
+import BrightnessSaturationTabContent from './BrightnessSaturationTabContent';
 
 type ColorProps = {
     savePrevStyle: (newStyle: maplibregl.StyleSpecification | undefined) => void
@@ -9,13 +10,13 @@ type ColorProps = {
 
 
 const ColorChanger: React.FC<ColorProps> = ({ savePrevStyle }) => {
-    const [tab, setTab] = useState<'theme' | 'category'>('category');
+    const [tab, setTab] = useState<'theme' | 'category' | 'brightness-saturation'>('category');
 
     return (
         <div>
             <Tabs
                 activeKey={tab}
-                onChange={key => setTab(key as 'theme' | 'category')}
+                onChange={key => setTab(key as 'theme' | 'category' | 'brightness-saturation')}
                 items={[
                     {
                         key: 'category',
@@ -29,6 +30,13 @@ const ColorChanger: React.FC<ColorProps> = ({ savePrevStyle }) => {
                         label: 'テーマ',
                         children: (
                             <ThemeTabContent savePrevStyle={savePrevStyle} />
+                        ),
+                    },
+                    {
+                        key: 'brightness-saturation',
+                        label: '明度・彩度調整',
+                        children: (
+                            <BrightnessSaturationTabContent savePrevStyle={savePrevStyle} />
                         ),
                     }
                 ]}
