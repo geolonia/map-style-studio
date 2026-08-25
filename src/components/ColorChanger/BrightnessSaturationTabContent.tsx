@@ -17,31 +17,39 @@ const BrightnessSaturationTabContent: React.FC<Props> = ({ savePrevStyle }) => {
     const [style, setStyle] = useAtom(styleAtom);
     // 調整の基準となる、明度・彩度を当てる前のスタイル
     const baseStyleRef = useRef<StyleSpecification | null>(null);
+    // 自分が書き込んだスタイル。外部からの更新と区別するために持つ。
+    const appliedStyleRef = useRef<StyleSpecification | null>(null);
+
+    // style は遅れて入ることも、他の編集で差し替わることもある。
+    // 自分の書き込み以外で変わったときは、それを新しい基準スタイルにする。
+    useEffect(() => {
+        if (!style || typeof style !== 'object') { return; }
+        if (style === appliedStyleRef.current) { return; }
+        baseStyleRef.current = style;
+        setBrightness(0);
+        setSaturation(0);
+    }, [style]);
 
     useEffect(() => {
         if (!style || typeof style !== 'object') { return; }
+        const base = baseStyleRef.current;
+        if (!base) { return; }
 
-        // どちらも0のときは調整していない状態。ここを基準スタイルとして控える。
+        // どちらも0なら調整していない状態。基準スタイルへ戻すだけにする。
         if (brightness === 0 && saturation === 0) {
-            const base = baseStyleRef.current;
-            if (!base) {
-                baseStyleRef.current = style;
-                return;
-            }
-            // 0に戻したら基準スタイルへ戻す
             if (style !== base) {
                 savePrevStyle(style);
+                appliedStyleRef.current = base;
                 setStyle(base);
             }
             return;
         }
 
-        const base = baseStyleRef.current;
-        if (!base) { return; }
-
         // 現在のスタイルに重ねると調整が累積するため、常に基準スタイルから作り直す
+        const adjusted = applyAppearanceAdjustments(base, brightness, saturation);
         savePrevStyle(style);
-        setStyle(applyAppearanceAdjustments(base, brightness, saturation));
+        appliedStyleRef.current = adjusted;
+        setStyle(adjusted);
     }, [brightness, saturation]);
 
     return (
