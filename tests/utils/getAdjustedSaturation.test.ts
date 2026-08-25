@@ -34,10 +34,10 @@ describe('getAdjustedSaturation', () => {
   });
 
   it('彩度を増減すると値が変化する', () => {
-    // オレンジ #ff8800
-    const base = getAdjustedSaturation(255, 136, 0, 0);
-    const up = getAdjustedSaturation(255, 136, 0, 100);
-    const down = getAdjustedSaturation(255, 136, 0, -100);
+    // くすんだ茶色 #806040
+    const base = getAdjustedSaturation(128, 96, 64, 0);
+    const up = getAdjustedSaturation(128, 96, 64, 2);
+    const down = getAdjustedSaturation(128, 96, 64, -2);
     expect(up).toBeGreaterThan(base);
     expect(down).toBeLessThan(base);
   });

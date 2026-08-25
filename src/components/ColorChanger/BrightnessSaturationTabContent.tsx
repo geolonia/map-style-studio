@@ -18,7 +18,7 @@ const BrightnessSaturationTabContent: React.FC<Props> = ({ savePrevStyle }) => {
     useEffect(() => {
         if (!style || typeof style !== 'object') { return; }
         const newStyle = adjustStyleBrightness(style, brightness);
-        savePrevStyle(newStyle);
+        savePrevStyle(style);
         setStyle(newStyle);
     }, [brightness]);
 
@@ -26,7 +26,7 @@ const BrightnessSaturationTabContent: React.FC<Props> = ({ savePrevStyle }) => {
     useEffect(() => {
         if (!style || typeof style !== 'object') { return; }
         const newStyle = adjustStyleSaturation(style, saturation);
-        savePrevStyle(newStyle);
+        savePrevStyle(style);
         setStyle(newStyle);
     }, [saturation]);
 

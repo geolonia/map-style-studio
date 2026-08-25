@@ -1,4 +1,4 @@
-import { rgbaToHex } from '../../src/utils/generateStyleFromTheme';
+import { rgbaToHex } from '../../src/utils/colorHelpers';
 
 // rgbaをHexに変換する
 describe('rgbaToHex', () => {

@@ -10,17 +10,17 @@ describe('adjustStyleSaturation', () => {
       {
         id: 'fill-layer',
         type: 'fill',
-        paint: { 'fill-color': '#ff0000' }
+        paint: { 'fill-color': '#806040' }
       },
       {
         id: 'line-layer',
         type: 'line',
-        paint: { 'line-color': '#00ff00' }
+        paint: { 'line-color': '#406080' }
       },
       {
         id: 'background-layer',
         type: 'background',
-        paint: { 'background-color': '#0000ff' }
+        paint: { 'background-color': '#608040' }
       },
       {
         id: 'symbol-layer',
@@ -51,9 +51,14 @@ describe('adjustStyleSaturation', () => {
       .toBe(baseStyle.layers?.[3]?.paint?.['icon-color']);
   });
 
+  it('元のスタイルを書き換えないこと', () => {
+    adjustStyleSaturation(baseStyle, 100);
+    expect(baseStyle.layers?.[0]?.paint?.['fill-color']).toBe('#806040');
+  });
+
   it('複数回彩度変更しても、元の色を基準に彩度が変更されること', () => {
-    const saturation1 = 50;
-    const saturation2 = 100;
+    const saturation1 = 2;
+    const saturation2 = 4;
 
     // 1回目の彩度変更
     const styleOnce = adjustStyleSaturation(baseStyle, saturation1);

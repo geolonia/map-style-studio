@@ -3,9 +3,14 @@
  **********/ 
 
 
-// 16進カラーコード (#RRGGBB) → {r,g,b} へ
+// 16進カラーコード (#RGB / #RRGGBB) → {r,g,b} へ
 export function hexToRgb(hex: string) {
-  const match = hex.replace('#', '').match(/^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
+  const body = hex.replace('#', '');
+  // 3桁は各桁を2回繰り返した6桁と同じ色を指す
+  const normalized = /^[a-f\d]{3}$/i.test(body)
+    ? body.split('').map(x => x + x).join('')
+    : body;
+  const match = normalized.match(/^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
   if (!match) return null;
   return {
     r: parseInt(match[1], 16),
@@ -231,13 +236,11 @@ export function getAdjustedSaturation(
   r /= 255; g /= 255; b /= 255;
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
-  let s = 0;
+  // 無彩色は色相を持たないため、彩度を上げても灰色のままとする
+  if (max === min) { return 0; }
+  const d = max - min;
   const l = (max + min) / 2;
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-  }
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
   // saturation値で調整し、0〜1にクリップ
-  s = Math.min(1, Math.max(0, s + saturation / range));
-  return s;
+  return Math.min(1, Math.max(0, s + saturation / range));
 }

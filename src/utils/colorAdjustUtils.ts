@@ -3,14 +3,9 @@ import { getAdjustedSaturation, hexToRgb, hslToRgb, numberToHex, rgbToHsl } from
 
 /* --- 明度を調整する --- */
 export function adjustBrightness(hex: string, brightness: number): string {
-    let r = 0, g = 0, b = 0;
-    if (hex.startsWith('#')) {
-      const bigint = parseInt(hex.slice(1), 16);
-      r = (bigint >> 16) & 255;
-      g = (bigint >> 8) & 255;
-      b = bigint & 255;
-    }
-    r /= 255; g /= 255; b /= 255;
+    const rgb = hexToRgb(hex);
+    if (!rgb) { return hex; }
+    const r = rgb.r / 255, g = rgb.g / 255, b = rgb.b / 255;
     const max = Math.max(r, g, b), min = Math.min(r, g, b);
     let h = 0, s = 0, l = (max + min) / 2;
     if (max !== min) {
@@ -50,23 +45,15 @@ export function adjustBrightness(hex: string, brightness: number): string {
 
 /* --- 彩度を調整する --- */
 export function adjustSaturation(hex: string, saturation: number): string {
-    let r = 0, g = 0, b = 0;
-    // HEX形式ならRGBに変換
-    if (hex.startsWith('#')) {
-        const rgb = hexToRgb(hex);
-        if (!rgb) { return hex; }
-        r = rgb.r;
-        g = rgb.g;
-        b = rgb.b;
-    }
-    r /= 255; g /= 255; b /= 255;
-    
-    const { h, l } = rgbToHsl(r, g, b);
+    const rgb = hexToRgb(hex);
+    if (!rgb) { return hex; }
+    const { r, g, b } = rgb;
+
+    // rgbToHsl は 0..1、getAdjustedSaturation は 0..255 を受け取る
+    const { h, l } = rgbToHsl(r / 255, g / 255, b / 255);
     const adjustedSaturation = getAdjustedSaturation(r, g, b, saturation);
     const { r: r1, g: g1, b: b1 } = hslToRgb(h, adjustedSaturation, l);
 
-    console.log(`#${numberToHex(r1)}${numberToHex(g1)}${numberToHex(b1)}`);
-    
     return `#${numberToHex(r1)}${numberToHex(g1)}${numberToHex(b1)}`;
 }
 
@@ -77,17 +64,15 @@ export function adjustStyleBrightness(
 ): StyleSpecification {
 
   const newLayers = style.layers?.map(layer => {
-    const newLayer = { ...layer };
-    if (newLayer.paint) {
-      ['fill-color', 'line-color', 'background-color'].forEach(key => {
-        const paint = newLayer.paint as Record<string, unknown> | undefined;
-        const colorValue = paint?.[key];
-        if (typeof colorValue === 'string' && /^#/.test(colorValue)) {
-          (newLayer.paint as Record<string, unknown>)[key] = adjustBrightness(colorValue, brightness);
-        }
-      });
-    }
-    return newLayer;
+    if (!layer.paint) { return layer; }
+    const paint = { ...layer.paint } as Record<string, unknown>;
+    ['fill-color', 'line-color', 'background-color'].forEach(key => {
+      const colorValue = paint[key];
+      if (typeof colorValue === 'string' && /^#/.test(colorValue)) {
+        paint[key] = adjustBrightness(colorValue, brightness);
+      }
+    });
+    return { ...layer, paint } as typeof layer;
   });
 
   return {
@@ -104,17 +89,15 @@ export function adjustStyleSaturation(
 ): StyleSpecification {
 
   const newLayers = style.layers?.map(layer => {
-    const newLayer = { ...layer };
-    if (newLayer.paint) {
-      const paint = newLayer.paint as Record<string, unknown>;
-      ['fill-color', 'line-color', 'background-color'].forEach(key => {
-        const colorValue = paint[key];
-        if (typeof colorValue === 'string' && /^#/.test(colorValue)) {
-          paint[key] = adjustSaturation(colorValue, saturation);
-        }
-      });
-    }
-    return newLayer;
+    if (!layer.paint) { return layer; }
+    const paint = { ...layer.paint } as Record<string, unknown>;
+    ['fill-color', 'line-color', 'background-color'].forEach(key => {
+      const colorValue = paint[key];
+      if (typeof colorValue === 'string' && /^#/.test(colorValue)) {
+        paint[key] = adjustSaturation(colorValue, saturation);
+      }
+    });
+    return { ...layer, paint } as typeof layer;
   });
 
   return {
