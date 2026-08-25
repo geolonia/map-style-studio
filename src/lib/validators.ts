@@ -37,11 +37,40 @@ export function validateTileUrl(value: string): ValidationResult {
   if (value === '') return ok();
   const trimmed = value.trim();
   if (trimmed === '') return ng('有効なURLを入力してください');
-  // mapbox:// 等のカスタムプロトコルを許可
-  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) {
+  // mapbox:// は URL として解釈できないため個別に許可する
+  if (/^mapbox:\/\/.+/i.test(trimmed)) return ok();
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return ng('有効なURLを入力してください');
+    }
+    if (url.host === '') {
+      return ng('有効なURLを入力してください');
+    }
     return ok();
+  } catch {
+    return ng('有効なURLを入力してください');
   }
-  return ng('有効なURLを入力してください');
+}
+
+/**
+ * GeoJSON データ バリデーション
+ * geojson ソースの data は URL とインラインの GeoJSON オブジェクトの両方を取りうる。
+ */
+export function validateGeojsonData(value: string): ValidationResult {
+  if (value === '') return ok();
+  const trimmed = value.trim();
+  if (trimmed === '') return ng('URLまたはGeoJSONオブジェクトを入力してください');
+  if (validateUrl(trimmed).valid) return ok();
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return ng('URLまたはGeoJSONオブジェクトを入力してください');
+    }
+    return ok();
+  } catch {
+    return ng('URLまたはGeoJSONオブジェクトを入力してください');
+  }
 }
 
 /**
@@ -87,8 +116,13 @@ export function validateCoordinates(value: string): ValidationResult {
   if (parts.length !== 2) {
     return ng('「経度,緯度」の形式で入力してください');
   }
-  const lng = Number(parts[0].trim());
-  const lat = Number(parts[1].trim());
+  const lngRaw = parts[0].trim();
+  const latRaw = parts[1].trim();
+  if (lngRaw === '' || latRaw === '') {
+    return ng('経度・緯度には数値を入力してください');
+  }
+  const lng = Number(lngRaw);
+  const lat = Number(latRaw);
   if (isNaN(lng) || isNaN(lat)) {
     return ng('経度・緯度には数値を入力してください');
   }

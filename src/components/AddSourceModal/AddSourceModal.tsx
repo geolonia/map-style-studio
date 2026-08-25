@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Space, Select, Input, message, Typography } from 'antd';
 import type { SourceSpecification } from 'maplibre-gl';
-import { validateSourceId, validateUrl, validateTileUrl, validateZoomLevel } from '../../lib/validators';
+import { validateSourceId, validateUrl, validateTileUrl, validateZoomLevel, validateGeojsonData } from '../../lib/validators';
 
 const { Text } = Typography;
 
@@ -28,6 +28,19 @@ const initialState = {
   tiles: [],
   minzoom: undefined,
   maxzoom: undefined,
+};
+
+// geojson の data 欄はURL文字列とインラインGeoJSONの両方を受け付ける
+const parseGeojsonData = (value: string): unknown => {
+  const trimmed = value.trim();
+  if (trimmed === '') return trimmed;
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+  } catch {
+    // URL としてそのまま渡す
+  }
+  return trimmed;
 };
 
 type ValidationErrors = {
@@ -64,9 +77,11 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ open, onOk, onCancel })
       newErrors.sourceId = sourceIdResult.message;
     }
 
-    // URL バリデーション
+    // URL / data バリデーション
     if (newSource.url && newSource.type !== 'video') {
-      const urlResult = validateUrl(newSource.url);
+      const urlResult = newSource.type === 'geojson'
+        ? validateGeojsonData(newSource.url)
+        : validateUrl(newSource.url);
       if (!urlResult.valid) {
         newErrors.url = urlResult.message;
       }
@@ -107,7 +122,11 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ open, onOk, onCancel })
       return;
     }
 
-    const { sourceId, ...sourceSpec } = newSource;
+    const { sourceId, url, ...rest } = newSource;
+    // geojson ソースは url ではなく data にURLまたはGeoJSONオブジェクトを持つ
+    const sourceSpec = newSource.type === 'geojson'
+      ? { ...rest, data: parseGeojsonData(url) }
+      : { ...rest, url };
     onOk(sourceId, sourceSpec as SourceSpecification);
     setNewSource(initialState);
     setErrors({});

@@ -59,6 +59,8 @@ const LayerDetailAccordion: React.FC<Props> = ({ layer, editing, onEdit, onReset
 
   useEffect(() => {
     setLocalEditing(editing);
+    // 編集対象が切り替わったら前のフィールドのエラー表示を持ち越さない
+    setJsonError(undefined);
   }, [editing]);
 
   useEffect(() => {

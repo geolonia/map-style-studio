@@ -34,23 +34,22 @@ const StyleUrlLoader: React.FC<Props> = ({ setLoadError }) => {
   const inputRef = useRef<InputRef>(null);
 
   const handleLoad = async () => {
+    // 入力形式のエラーは入力欄の下に出すため、読み込み失敗としては扱わない
     if (!url || url.trim() === '') {
       message.warning('URLを入力してください');
       setUrl('');
-      setLoadError(true);
       return;
     }
     const urlResult = validateUrl(url.trim());
     if (!urlResult.valid) {
       setUrlError(urlResult.message);
-      setLoadError(true);
       return;
     }
     if (!/\.json(\?.*)?$/i.test(url.trim())) {
       setUrlError('URLは .json で終わる必要があります');
-      setLoadError(true);
       return;
     }
+    setUrlError(undefined);
     setLoading(true);
     try {
       setStyle(url);

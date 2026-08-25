@@ -35,6 +35,11 @@ const StyleJsonViewer: React.FC<StyleJsonViewerProps> = ({ savePrevStyle }) => {
     }
     try {
       const parsed = JSON.parse(code);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        setJsonError('style.json はオブジェクトである必要があります');
+        message.error('style.json はオブジェクトである必要があります');
+        return;
+      }
       setStyle(parsed);
       setEditing(false);
       setJsonError(undefined);
